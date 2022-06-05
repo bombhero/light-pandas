@@ -1,49 +1,27 @@
-import os
+import copy
 
 
 class DataFrame:
     def __init__(self, columns=None):
         if columns is None:
-            self.headers = []
+            self.columns = []
         else:
-            self.headers = [val for val in columns]
+            self.columns = [val for val in columns]
         self.data_frame = []
 
-    def read_csv(self, path=None, sep=',', index_col=0):
-        if path is None:
-            return
-        if not os.path.isfile(path):
-            return
-        fid = open(path)
-        header_line = fid.readline()
-        self.headers = header_line.strip().split(sep)
-        if index_col < len(self.headers):
-            del self.headers[index_col]
-        while True:
-            data_line = fid.readline()
-            if not data_line:
-                break
-            data_list = data_line.strip().split(sep)
-            if index_col < len(data_list):
-                del data_list[index_col]
-            self.data_frame.append(data_list)
-        fid.close()
-
-    def get_value(self, line_num, col_name):
-        col_num = self.headers.index(col_name)
-        return self.data_frame[line_num][col_num]
-
-    def append_row(self, data_dict):
-        row_line = ['' for _ in range(len(self.headers))]
+    def append(self, data_dict, ignore_index=False):
+        df = copy.copy(self)
+        row_line = ['' for _ in range(len(df.columns))]
         for key in data_dict.keys():
-            if key not in self.headers:
-                self.headers.append(key)
-                for idx in range(len(self.data_frame)):
-                    self.data_frame.append('')
+            if key not in df.columns:
+                df.columns.append(key)
+                for idx in range(len(df.data_frame)):
+                    df.data_frame.append('')
                 row_line.append('')
-            col_num = self.headers.index(key)
+            col_num = df.columns.index(key)
             row_line[col_num] = data_dict[key]
-        self.data_frame.append(row_line)
+        df.data_frame.append(row_line)
+        return df
 
     def to_csv(self, path, sep=','):
         fid = open(path, 'w')
