@@ -87,3 +87,8 @@ class DataFrame:
     def __len__(self):
         return len(self.data_frame)
 
+    def __getitem__(self, col_name):
+        col_idx = self.columns.index(col_name)
+        for row_idx in range(len(self.data_frame)):
+            yield self.data_frame[row_idx][col_idx]
+

@@ -36,6 +36,17 @@ class Test(unittest.TestCase):
         row_line = dict(df.iloc[1])
         self.assertDictEqual(row_line, {'item1': 'bomb', 'item2': 't4'})
 
+    def test_col_pick(self):
+        df = lpd.read_csv('test.csv')
+        row_li = list(df['item1'])
+        self.assertListEqual(row_li, ['t1', 't3', 't5', 't7', 't9'])
+
+    # def test_loc_pick(self):
+    #     df = lpd.read_csv('test.csv')
+    #     pick_df = df.loc[df['item1'] > 't4']
+    #     row_line = dict(pick_df.iloc[1])
+    #     self.assertDictEqual(row_line, {'item1': 't7', 'item2': 't8'})
+
 
 if __name__ == '__main__':
     unittest.main()
