@@ -41,11 +41,22 @@ class Test(unittest.TestCase):
         row_li = list(df['item1'])
         self.assertListEqual(row_li, ['t1', 't3', 't5', 't7', 't9'])
 
-    # def test_loc_pick(self):
-    #     df = lpd.read_csv('test.csv')
-    #     pick_df = df.loc[df['item1'] > 't4']
-    #     row_line = dict(pick_df.iloc[1])
-    #     self.assertDictEqual(row_line, {'item1': 't7', 'item2': 't8'})
+    def test_loc_pick(self):
+        df = lpd.read_csv('test.csv')
+        pick_df = df.loc[df['item1'] > 't4']
+        row_line = dict(pick_df.iloc[1])
+        self.assertDictEqual(row_line, {'item1': 't7', 'item2': 't8'})
+
+    def test_loc_mul_pick(self):
+        df = lpd.read_csv('test.csv')
+        row_line = list(df.loc[df['item1'] > 't4', 'item2'])
+        self.assertListEqual(row_line, ['t6', 't8', 't0'])
+
+    def test_loc_set(self):
+        df = lpd.read_csv('test.csv')
+        df.loc[df['item1'] > 't4', 'item2'] = 'bomb'
+        row_line = dict(df.iloc[2])
+        self.assertDictEqual(row_line, {'item1': 't5', 'item2': 'bomb'})
 
 
 if __name__ == '__main__':

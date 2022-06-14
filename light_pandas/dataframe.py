@@ -19,6 +19,27 @@ class RowItem:
         return len(self.df.columns)
 
 
+class ColumnItem:
+    def __init__(self, df, col_name):
+        self.df = df
+        self.col_name = col_name
+
+    def __iter__(self):
+        col_idx = self.df.columns.index(self.col_name)
+        for row_idx in range(len(self)):
+            yield self.df.data_frame[row_idx][col_idx]
+
+    def __gt__(self, other):
+        result_li = []
+        col_idx = self.df.columns.index(self.col_name)
+        for row_idx in range(len(self)):
+            result_li.append(self.df.data_frame[row_idx][col_idx] > other)
+        return result_li
+
+    def __len__(self):
+        return len(self.df)
+
+
 class IndexLocation:
     def __init__(self, df):
         self.df = df
@@ -52,6 +73,39 @@ class IndexLocation:
                 raise IndexError("single positional indexer is out-of-bounds")
 
 
+class Location:
+    def __init__(self, df):
+        self.df = df
+
+    def __getitem__(self, item):
+        if isinstance(item, list):
+            result_df = DataFrame(columns=self.df.columns)
+            for row_idx in range(len(item)):
+                if not item[row_idx]:
+                    continue
+                row_dict = {}
+                for col_idx in range(len(self.df.columns)):
+                    row_dict[self.df.columns[col_idx]] = self.df.data_frame[row_idx][col_idx]
+                result_df = result_df.append(row_dict, ignore_index=True)
+            return result_df
+        elif isinstance(item, tuple):
+            col_idx = self.df.columns.index(item[1])
+            result_li = []
+            for row_idx in range(len(item[0])):
+                if not item[0][row_idx]:
+                    continue
+                result_li.append(self.df.data_frame[row_idx][col_idx])
+            return result_li
+
+    def __setitem__(self, key, value):
+        col_idx = self.df.columns.index(key[1])
+        result_li = []
+        for row_idx in range(len(key[0])):
+            if not key[0][row_idx]:
+                continue
+            self.df.data_frame[row_idx][col_idx] = value
+
+
 class DataFrame:
     def __init__(self, columns=None):
         if columns is None:
@@ -60,6 +114,7 @@ class DataFrame:
             self.columns = [val for val in columns]
         self.data_frame = []
         self.iloc = IndexLocation(self)
+        self.loc = Location(self)
 
     def append(self, data_dict, ignore_index=False):
         df = copy.copy(self)
@@ -88,7 +143,5 @@ class DataFrame:
         return len(self.data_frame)
 
     def __getitem__(self, col_name):
-        col_idx = self.columns.index(col_name)
-        for row_idx in range(len(self.data_frame)):
-            yield self.data_frame[row_idx][col_idx]
-
+        column_item = ColumnItem(self, col_name)
+        return column_item
