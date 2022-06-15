@@ -58,6 +58,13 @@ class Test(unittest.TestCase):
         row_line = dict(df.iloc[2])
         self.assertDictEqual(row_line, {'item1': 't5', 'item2': 'bomb'})
 
+    def test_merge_df(self):
+        df1 = lpd.read_csv('test.csv')
+        df2 = lpd.read_csv('test.csv')
+        df2['item1'] = 'bomb'
+        df = lpd.merge(df1, df2, how='outer')
+        self.assertEqual(len(df), 10)
+
 
 if __name__ == '__main__':
     unittest.main()

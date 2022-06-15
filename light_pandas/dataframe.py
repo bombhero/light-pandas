@@ -7,6 +7,10 @@ class RowItem:
         self.row_idx = row_idx
         self.current_col_idx = 0
 
+    def __getitem__(self, key):
+        col_idx = self.df.columns.index(key)
+        return self.df.data_frame[self.row_idx][col_idx]
+
     def __setitem__(self, key, value):
         col_idx = self.df.columns.index(key)
         self.df.data_frame[self.row_idx][col_idx] = str(value)
@@ -17,6 +21,9 @@ class RowItem:
 
     def __len__(self):
         return len(self.df.columns)
+
+    def keys(self):
+        return self.df.columns
 
 
 class ColumnItem:
@@ -145,3 +152,8 @@ class DataFrame:
     def __getitem__(self, col_name):
         column_item = ColumnItem(self, col_name)
         return column_item
+
+    def __setitem__(self, key, value):
+        col_idx = self.columns.index(key)
+        for row_idx in range(len(self.data_frame)):
+            self.data_frame[row_idx][col_idx] = value
