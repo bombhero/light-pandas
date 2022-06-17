@@ -65,6 +65,11 @@ class Test(unittest.TestCase):
         df = lpd.merge(df1, df2, how='outer')
         self.assertEqual(len(df), 10)
 
+    def test_df_sort(self):
+        df = lpd.read_csv('test.csv')
+        df = df.sort_values(by=['item1'], ascending=False)
+        row_line = dict(df.iloc[0])
+        self.assertDictEqual(row_line, {'item1': 't9', 'item2': 't0'})
 
 if __name__ == '__main__':
     unittest.main()

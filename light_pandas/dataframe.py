@@ -137,6 +137,14 @@ class DataFrame:
         df.data_frame.append(row_line)
         return df
 
+    def _append_list(self, data_list):
+        df = copy.copy(self)
+        if len(data_list) != len(self.columns):
+            return df
+        else:
+            df.data_frame.append(data_list)
+            return df
+
     def to_csv(self, path, sep=','):
         fid = open(path, 'w')
         header_line = ',{}\n'.format(sep.join(self.headers))
@@ -145,6 +153,42 @@ class DataFrame:
             data_line = '{},{}\n'.format(idx, sep.join(self.data_frame[idx]))
             fid.write(data_line)
         fid.close()
+
+    def _sort_value(self, sort_col_list, data_frame, ascending=True):
+        if len(sort_col_list) == 0:
+            return data_frame
+        col_idx = sort_col_list[0]
+        result_data_frame = []
+        sort_dict = {}
+        for data_row in data_frame:
+            sort_key = data_row[col_idx]
+            if sort_key not in sort_dict.keys():
+                sort_dict[sort_key] = [data_row]
+            else:
+                sort_dict[sort_key].append(data_row)
+        next_col_list = copy.copy(sort_col_list)
+        del next_col_list[0]
+        for key in sort_dict.keys():
+            sort_dict[key] = self._sort_value(next_col_list, sort_dict[key])
+        key_seq = list(sort_dict.keys())
+        if ascending:
+            key_seq.sort()
+        else:
+            key_seq.sort(reverse=True)
+        for key in key_seq:
+            result_data_frame += sort_dict[key]
+        return result_data_frame
+
+    def sort_values(self, by=[], ascending=True):
+        result_df = DataFrame(columns=self.columns)
+        sort_seq = []
+        if len(by) > 0:
+            for col_name in by:
+                sort_seq.append(self.columns.index(col_name))
+            result_df.data_frame = self._sort_value(sort_seq, self.data_frame, ascending)
+        else:
+            result_df.data_frame = self.data_frame
+        return result_df
 
     def __len__(self):
         return len(self.data_frame)
