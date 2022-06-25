@@ -1,4 +1,5 @@
 import unittest
+import os
 import light_pandas as lpd
 # import pandas as lpd
 
@@ -17,6 +18,19 @@ class Test(unittest.TestCase):
         df = lpd.read_csv('test.csv')
         self.assertEqual(len(df), 5)
         self.assertListEqual(list(df.columns), ['item1', 'item2'])
+
+    def test_read_csv2(self):
+        df = lpd.read_csv('test2.csv')
+        self.assertEqual(len(df), 2)
+
+    def test_write_csv(self):
+        if os.path.exists('test_w.csv'):
+            os.remove('test_w.csv')
+        df = lpd.DataFrame(columns=('item1', 'item2'))
+        df = df.append({'item1': 't1', 'item2': 't2'}, ignore_index=True)
+        df.to_csv('test_w.csv')
+        df = lpd.read_csv('test_w.csv')
+        self.assertEqual(len(df), 1)
 
     def test_iloc(self):
         df = lpd.read_csv('test.csv')
@@ -41,11 +55,17 @@ class Test(unittest.TestCase):
         row_li = list(df['item1'])
         self.assertListEqual(row_li, ['t1', 't3', 't5', 't7', 't9'])
 
-    def test_loc_pick(self):
+    def test_loc_gt_pick(self):
         df = lpd.read_csv('test.csv')
         pick_df = df.loc[df['item1'] > 't4']
         row_line = dict(pick_df.iloc[1])
         self.assertDictEqual(row_line, {'item1': 't7', 'item2': 't8'})
+
+    def test_loc_lt_pick(self):
+        df = lpd.read_csv('test.csv')
+        pick_df = df.loc[df['item1'] < 't4']
+        row_line = dict(pick_df.iloc[1])
+        self.assertDictEqual(row_line, {'item1': 't3', 'item2': 't4'})
 
     def test_loc_mul_pick(self):
         df = lpd.read_csv('test.csv')

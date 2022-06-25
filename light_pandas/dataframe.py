@@ -1,4 +1,5 @@
 import copy
+import csv
 
 
 class RowItem:
@@ -36,12 +37,36 @@ class ColumnItem:
         for row_idx in range(len(self)):
             yield self.df.data_frame[row_idx][col_idx]
 
-    def __gt__(self, other):
+    def _compare(self, other, op):
         result_li = []
         col_idx = self.df.columns.index(self.col_name)
         for row_idx in range(len(self)):
-            result_li.append(self.df.data_frame[row_idx][col_idx] > other)
+            if op == 'gt':
+                result_li.append(self.df.data_frame[row_idx][col_idx] > other)
+            elif op == 'ge':
+                result_li.append(self.df.data_frame[row_idx][col_idx] >= other)
+            elif op == 'eq':
+                result_li.append(self.df.data_frame[row_idx][col_idx] == other)
+            elif op == 'lt':
+                result_li.append(self.df.data_frame[row_idx][col_idx] < other)
+            elif op == 'le':
+                result_li.append(self.df.data_frame[row_idx][col_idx] <= other)
         return result_li
+
+    def __gt__(self, other):
+        return self._compare(other, 'gt')
+
+    def __ge__(self, other):
+        return self._compare(other, 'ge')
+
+    def __eq__(self, other):
+        return self._compare(other, 'eq')
+
+    def __lt__(self, other):
+        return self._compare(other, 'lt')
+
+    def __le__(self, other):
+        return self._compare(other, 'le')
 
     def __len__(self):
         return len(self.df)
@@ -146,13 +171,10 @@ class DataFrame:
             return df
 
     def to_csv(self, path, sep=','):
-        fid = open(path, 'w')
-        header_line = ',{}\n'.format(sep.join(self.headers))
-        fid.write(header_line)
-        for idx in range(len(self.data_frame)):
-            data_line = '{},{}\n'.format(idx, sep.join(self.data_frame[idx]))
-            fid.write(data_line)
-        fid.close()
+        with open(path, mode='w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(self.columns)
+            writer.writerows(self.data_frame)
 
     def _sort_value(self, sort_col_list, data_frame, ascending=True):
         if len(sort_col_list) == 0:
