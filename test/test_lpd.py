@@ -91,5 +91,12 @@ class Test(unittest.TestCase):
         row_line = dict(df.iloc[0])
         self.assertDictEqual(row_line, {'item1': 't9', 'item2': 't0'})
 
+    def test_df_drop_duplicates(self):
+        df = lpd.read_csv('test.csv')
+        df = df.append({'item1': 't3', 'item2': 't4'}, ignore_index=True)
+        df = df.drop_duplicates()
+        self.assertEqual(len(df), 5)
+
+
 if __name__ == '__main__':
     unittest.main()

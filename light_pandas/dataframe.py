@@ -212,6 +212,13 @@ class DataFrame:
             result_df.data_frame = self.data_frame
         return result_df
 
+    def drop_duplicates(self):
+        result_df = DataFrame(columns=self.columns)
+        for row in self.data_frame:
+            if row not in result_df.data_frame:
+                result_df._append_list(row)
+        return result_df
+
     def __len__(self):
         return len(self.data_frame)
 
