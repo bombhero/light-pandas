@@ -1,6 +1,6 @@
 import unittest
 import os
-import light_pandas as lpd
+import lightpandas as lpd
 # import pandas as lpd
 
 

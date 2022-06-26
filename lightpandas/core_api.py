@@ -1,6 +1,6 @@
 import os
 import csv
-from light_pandas.dataframe import DataFrame
+from lightpandas.dataframe import DataFrame
 
 
 def read_csv(filepath_or_buf, sep=',', index_col=None):
