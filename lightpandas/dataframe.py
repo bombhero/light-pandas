@@ -144,9 +144,23 @@ class DataFrame:
             self.columns = []
         else:
             self.columns = [val for val in columns]
+        self.index = []
+        self.index_name = ''
         self.data_frame = []
         self.iloc = IndexLocation(self)
         self.loc = Location(self)
+
+    def increase_index(self, defined_index=None):
+        if defined_index is None:
+            local_index = 0
+            while True:
+                if local_index not in self.index:
+                    break
+                else:
+                    local_index += 1
+        else:
+            local_index = str(defined_index)
+        self.index.append(local_index)
 
     def append(self, data_dict, ignore_index=False):
         df = copy.copy(self)
@@ -160,6 +174,7 @@ class DataFrame:
             col_num = df.columns.index(key)
             row_line[col_num] = data_dict[key]
         df.data_frame.append(row_line)
+        df.increase_index()
         return df
 
     def _append_list(self, data_list):
@@ -168,13 +183,23 @@ class DataFrame:
             return df
         else:
             df.data_frame.append(data_list)
+            df.increase_index()
             return df
 
-    def to_csv(self, path, sep=','):
+    def to_csv(self, path, sep=',', index=True):
         with open(path, mode='w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(self.columns)
-            writer.writerows(self.data_frame)
+            if index:
+                col_list = copy.copy(self.columns)
+                data_frame = copy.copy(self.data_frame)
+                col_list.insert(0, self.index_name)
+                for row_id in range(len(self.index)):
+                    data_frame[row_id].insert(0, self.index[row_id])
+                writer.writerow(col_list)
+                writer.writerows(data_frame)
+            else:
+                writer.writerow(self.columns)
+                writer.writerows(self.data_frame)
 
     def _sort_value(self, sort_col_list, data_frame, ascending=True):
         if len(sort_col_list) == 0:
@@ -201,6 +226,10 @@ class DataFrame:
             result_data_frame += sort_dict[key]
         return result_data_frame
 
+    def _re_index(self, index_name):
+        self.index = [idx for idx in range(len(self.data_frame))]
+        self.index_name = index_name
+
     def sort_values(self, by=[], ascending=True):
         result_df = DataFrame(columns=self.columns)
         sort_seq = []
@@ -210,6 +239,7 @@ class DataFrame:
             result_df.data_frame = self._sort_value(sort_seq, self.data_frame, ascending)
         else:
             result_df.data_frame = self.data_frame
+        result_df._re_index(self.index_name)
         return result_df
 
     def drop_duplicates(self):
@@ -230,3 +260,13 @@ class DataFrame:
         col_idx = self.columns.index(key)
         for row_idx in range(len(self.data_frame)):
             self.data_frame[row_idx][col_idx] = value
+
+    def __str__(self):
+        result_str = ''
+        result_str += '\t\t{}'.format('\t\t'.join(self.columns))
+        if len(self.index_name) > 0:
+            result_str += '\n{}'.format(self.index_name)
+        for idx in range(len(self.index)):
+            result_str += '\n{}\t\t{}'.format(self.index[idx], '\t\t'.join(self.data_frame[idx]))
+        return result_str
+

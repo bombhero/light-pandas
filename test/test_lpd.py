@@ -23,6 +23,14 @@ class Test(unittest.TestCase):
         df = lpd.read_csv('test2.csv')
         self.assertEqual(len(df), 2)
 
+    def test_read_csv_with_index(self):
+        df = lpd.read_csv('test_with_index.csv', index_col=0)
+        self.assertEqual(len(df.columns), 4)
+
+    def test_read_csv_with_index2(self):
+        df = lpd.read_csv('test_with_index.csv')
+        self.assertEqual(len(df.columns), 5)
+
     def test_write_csv(self):
         if os.path.exists('test_w.csv'):
             os.remove('test_w.csv')
