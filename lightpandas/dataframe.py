@@ -1,3 +1,4 @@
+# coding=utf8
 import copy
 import csv
 
@@ -152,7 +153,10 @@ class DataFrame:
 
     def increase_index(self, defined_index=None):
         if defined_index is None:
-            local_index = 0
+            if len(self.index) > 0:
+                local_index = self.index[-1] + 1
+            else:
+                local_index = 0
             while True:
                 if local_index not in self.index:
                     break

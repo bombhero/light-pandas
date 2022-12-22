@@ -1,3 +1,4 @@
+# coding=utf8
 import os
 import csv
 from lightpandas.dataframe import DataFrame
@@ -28,7 +29,7 @@ def _generate_columns(col_list, index_col):
 
 
 def read_csv(filepath_or_buf, sep=',', index_col=None):
-    with open(filepath_or_buf, mode='r') as f:
+    with open(filepath_or_buf, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
         index_name, columns = _generate_columns(next(reader), index_col)
         df = DataFrame(columns=columns)
