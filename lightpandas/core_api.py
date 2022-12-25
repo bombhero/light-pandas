@@ -28,7 +28,7 @@ def _generate_columns(col_list, index_col):
     return index_name, result_col
 
 
-def read_csv(filepath_or_buf, sep=',', index_col=None):
+def read_csv(filepath_or_buf, decimal=',', index_col=None):
     with open(filepath_or_buf, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
         index_name, columns = _generate_columns(next(reader), index_col)
