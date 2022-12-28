@@ -1,6 +1,8 @@
 # coding=utf8
 import os
 import csv
+import pandas as pd
+
 from lightpandas.dataframe import DataFrame
 
 
@@ -28,7 +30,8 @@ def _generate_columns(col_list, index_col):
     return index_name, result_col
 
 
-def read_csv(filepath_or_buf, decimal=',', index_col=None):
+def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, low_memory=False):
+    delimiter = sep
     with open(filepath_or_buf, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
         index_name, columns = _generate_columns(next(reader), index_col)
@@ -62,3 +65,19 @@ def merge(left, right, how='inner'):
         result_df = DataFrame(columns=left.columns)
     return result_df
 
+
+def import_from_pandas(pandas_df):
+    result_df = DataFrame(columns=pandas_df.columns)
+    for idx in range(len(pandas_df)):
+        lpd_row = {}
+        pd_row = dict(pandas_df.iloc[idx])
+        for col_name in pd_row.keys():
+            lpd_row[col_name] = str(pd_row[col_name])
+        result_df.append(lpd_row, ignore_index=True)
+    return result_df
+
+
+def read_excel(io, sheet_name=None, keep_default_na=False, na_values=None, header=0):
+    pd_df = pd.read_excel(io, sheet_name=sheet_name, keep_default_na=keep_default_na,
+                          na_values=na_values, header=header)
+    return import_from_pandas(pd_df)

@@ -1,6 +1,7 @@
 # coding=utf8
 import copy
 import csv
+import pandas as pd
 
 
 class RowItem:
@@ -11,6 +12,7 @@ class RowItem:
 
     def __getitem__(self, key):
         col_idx = self.df.columns.index(key)
+        value = self.df.data_frame[self.row_idx][col_idx]
         return self.df.data_frame[self.row_idx][col_idx]
 
     def __setitem__(self, key, value):
@@ -140,7 +142,7 @@ class Location:
 
 
 class DataFrame:
-    def __init__(self, columns=None):
+    def __init__(self, data=None, columns=None):
         if columns is None:
             self.columns = []
         else:
@@ -150,6 +152,31 @@ class DataFrame:
         self.data_frame = []
         self.iloc = IndexLocation(self)
         self.loc = Location(self)
+        if data is not None:
+            max_row_count = 1
+            row_idx = 0
+            while True:
+                row_dict = {}
+                for col_name in data.keys():
+                    if row_idx == 0:
+                        if col_name not in self.columns:
+                            self.columns.append(col_name)
+                        if type(data[col_name]) == list:
+                            if len(data[col_name]) > max_row_count:
+                                max_row_count = len(data[col_name])
+                            row_val = str(data[col_name][row_idx])
+                        else:
+                            row_val = str(data[col_name])
+                    else:
+                        if type(data[col_name]) == list and len(data[col_name]) > row_idx:
+                            row_val = str(data[col_name][row_idx])
+                        else:
+                            row_val = ''
+                    row_dict[col_name] = row_val
+                self.append(row_dict)
+                row_idx += 1
+                if row_idx >= max_row_count:
+                    break
 
     def increase_index(self, defined_index=None):
         if defined_index is None:
@@ -176,7 +203,7 @@ class DataFrame:
                     df.data_frame.append('')
                 row_line.append('')
             col_num = df.columns.index(key)
-            row_line[col_num] = data_dict[key]
+            row_line[col_num] = str(data_dict[key])
         df.data_frame.append(row_line)
         df.increase_index()
         return df
@@ -190,8 +217,8 @@ class DataFrame:
             df.increase_index()
             return df
 
-    def to_csv(self, path, sep=',', index=True):
-        with open(path, mode='w', newline='') as f:
+    def to_csv(self, path_or_buf, sep=',', index=True):
+        with open(path_or_buf, mode='w', newline='') as f:
             writer = csv.writer(f)
             if index:
                 col_list = copy.copy(self.columns)
@@ -252,6 +279,61 @@ class DataFrame:
             if row not in result_df.data_frame:
                 result_df._append_list(row)
         return result_df
+
+    def _drop_one_row(self, idx_name):
+        if idx_name not in self.index:
+            return
+        for idx in range(len(self.index)):
+            if self.index[idx] == idx_name:
+                break
+        del self.data_frame[idx]
+        del self.index[idx]
+
+    def _drop_rows(self, index):
+        df = copy.deepcopy(self)
+        if (type(index) is str) or (type(index) is int):
+            df._drop_one_row(index)
+        elif type(index) is list:
+            for idx_name in index:
+                df._drop_one_row(idx_name)
+        return df
+
+    def _drop_one_column(self, col_name):
+        if col_name not in self.columns:
+            return
+        for col_idx in range(len(self.columns)):
+            if self.columns[col_idx] == col_name:
+                break
+        for row_list in self.data_frame:
+            del row_list[col_idx]
+        del self.columns[col_idx]
+
+    def _drop_column(self, columns):
+        df = copy.deepcopy(self)
+        if type(columns) is str:
+            df._drop_one_column(columns)
+        elif type(columns) is list:
+            for col_name in columns:
+                df._drop_one_column(col_name)
+        return df
+
+    def drop(self, labels=None, axis=0, inplace=False):
+        if axis == 0 or axis == 'index':
+            new_df = self._drop_rows(labels)
+        elif axis == 1 or axis == 'column':
+            new_df = self._drop_column(labels)
+        if inplace:
+            self.index = new_df.index
+            self.columns = new_df.columns
+            self.data_frame = new_df.data_frame
+        else:
+            return new_df
+
+    def export_to_pandas(self):
+        pd_df = pd.DataFrame(columns=self.columns)
+        for idx in range(len(self)):
+            pd_df = pd_df.append(dict(self.iloc[idx]), ignore_index=True)
+        return pd_df
 
     def __len__(self):
         return len(self.data_frame)
