@@ -30,7 +30,7 @@ def _generate_columns(col_list, index_col):
     return index_name, result_col
 
 
-def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, low_memory=False):
+def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, keep_default_na=False, low_memory=False):
     delimiter = sep
     with open(filepath_or_buf, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -43,24 +43,35 @@ def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, low_memory
                 index_val = row[index_col]
                 del row[index_col]
             df.data_frame.append(row)
-            df.increase_index(index_val)
+        df._re_index(df.index_name)
     return df
+
+
+# def merge(left, right, how='inner'):
+#     result_df = None
+#     if how == 'outer':
+#         result_df = left
+#         for r_row_idx in range(len(right)):
+#             skip_row = False
+#             row_item = right.iloc[r_row_idx]
+#             for l_row_idx in range(len(result_df)):
+#                 if row_item == result_df.iloc[l_row_idx]:
+#                     skip_row = True
+#                     break
+#             if skip_row:
+#                 continue
+#             result_df = result_df.append(row_item, ignore_index=True)
+#     elif how == 'inner':
+#         result_df = DataFrame(columns=left.columns)
+#     return result_df
 
 
 def merge(left, right, how='inner'):
     result_df = None
     if how == 'outer':
-        result_df = left
-        for r_row_idx in range(len(right)):
-            skip_row = False
-            row_item = right.iloc[r_row_idx]
-            for l_row_idx in range(len(result_df)):
-                if row_item == result_df.iloc[l_row_idx]:
-                    skip_row = True
-                    break
-            if skip_row:
-                continue
-            result_df = result_df.append(row_item, ignore_index=True)
+        result_df = DataFrame(columns=left.columns)
+        result_df.data_frame = left.data_frame + right.data_frame
+        result_df._re_index(left.index_name)
     elif how == 'inner':
         result_df = DataFrame(columns=left.columns)
     return result_df
@@ -81,3 +92,8 @@ def read_excel(io, sheet_name=None, keep_default_na=False, na_values=None, heade
     pd_df = pd.read_excel(io, sheet_name=sheet_name, keep_default_na=keep_default_na,
                           na_values=na_values, header=header)
     return import_from_pandas(pd_df)
+
+
+def ExcelWriter(path):
+    return pd.ExcelWriter(path=path)
+

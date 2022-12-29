@@ -12,7 +12,6 @@ class RowItem:
 
     def __getitem__(self, key):
         col_idx = self.df.columns.index(key)
-        value = self.df.data_frame[self.row_idx][col_idx]
         return self.df.data_frame[self.row_idx][col_idx]
 
     def __setitem__(self, key, value):
@@ -133,8 +132,11 @@ class Location:
             return result_li
 
     def __setitem__(self, key, value):
+        if key[1] not in self.df.columns:
+            self.df.columns.append(key[1])
+            for idx in range(len(self.df.data_frame)):
+                self.df.data_frame[idx].append('')
         col_idx = self.df.columns.index(key[1])
-        result_li = []
         for row_idx in range(len(key[0])):
             if not key[0][row_idx]:
                 continue
@@ -157,6 +159,7 @@ class DataFrame:
             row_idx = 0
             while True:
                 row_dict = {}
+                skip_row = True
                 for col_name in data.keys():
                     if row_idx == 0:
                         if col_name not in self.columns:
@@ -164,16 +167,23 @@ class DataFrame:
                         if type(data[col_name]) == list:
                             if len(data[col_name]) > max_row_count:
                                 max_row_count = len(data[col_name])
-                            row_val = str(data[col_name][row_idx])
+                            if len(data[col_name]) > 0:
+                                row_val = str(data[col_name][row_idx])
+                                skip_row = False
+                            else:
+                                row_val = ''
                         else:
                             row_val = str(data[col_name])
+                            skip_row = False
                     else:
                         if type(data[col_name]) == list and len(data[col_name]) > row_idx:
                             row_val = str(data[col_name][row_idx])
                         else:
                             row_val = ''
+                        skip_row = False
                     row_dict[col_name] = row_val
-                self.append(row_dict)
+                if not skip_row:
+                    self.append(row_dict)
                 row_idx += 1
                 if row_idx >= max_row_count:
                     break
@@ -217,12 +227,22 @@ class DataFrame:
             df.increase_index()
             return df
 
+    def _pick_columns(self, col_list):
+        new_df = DataFrame(columns=col_list)
+        col_idx_list = [self.columns.index(col_name) for col_name in col_list]
+        for row_idx in range(len(self)):
+            row_li = []
+            for col_idx in col_idx_list:
+                row_li.append(self.data_frame[row_idx][col_idx])
+            new_df._append_list(row_li)
+        return new_df
+
     def to_csv(self, path_or_buf, sep=',', index=True):
-        with open(path_or_buf, mode='w', newline='') as f:
+        with open(path_or_buf, mode='w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             if index:
-                col_list = copy.copy(self.columns)
-                data_frame = copy.copy(self.data_frame)
+                col_list = copy.deepcopy(self.columns)
+                data_frame = copy.deepcopy(self.data_frame)
                 col_list.insert(0, self.index_name)
                 for row_id in range(len(self.index)):
                     data_frame[row_id].insert(0, self.index[row_id])
@@ -231,6 +251,11 @@ class DataFrame:
             else:
                 writer.writerow(self.columns)
                 writer.writerows(self.data_frame)
+
+    def to_excel(self, excel_writer, sheet_name='Sheet1', columns=None, header=True, index=True, index_label=None):
+        pd_df = self.export_to_pandas()
+        pd_df.to_excel(excel_writer, sheet_name=sheet_name, columns=columns, header=header, index=index,
+                       index_label=index_label)
 
     def _sort_value(self, sort_col_list, data_frame, ascending=True):
         if len(sort_col_list) == 0:
@@ -281,13 +306,15 @@ class DataFrame:
         return result_df
 
     def _drop_one_row(self, idx_name):
+        idx = None
         if idx_name not in self.index:
             return
         for idx in range(len(self.index)):
             if self.index[idx] == idx_name:
                 break
-        del self.data_frame[idx]
-        del self.index[idx]
+        if idx is not None:
+            del self.data_frame[idx]
+            del self.index[idx]
 
     def _drop_rows(self, index):
         df = copy.deepcopy(self)
@@ -299,14 +326,16 @@ class DataFrame:
         return df
 
     def _drop_one_column(self, col_name):
+        col_idx = None
         if col_name not in self.columns:
             return
         for col_idx in range(len(self.columns)):
             if self.columns[col_idx] == col_name:
                 break
-        for row_list in self.data_frame:
-            del row_list[col_idx]
-        del self.columns[col_idx]
+        if col_idx is not None:
+            for row_list in self.data_frame:
+                del row_list[col_idx]
+            del self.columns[col_idx]
 
     def _drop_column(self, columns):
         df = copy.deepcopy(self)
@@ -322,6 +351,8 @@ class DataFrame:
             new_df = self._drop_rows(labels)
         elif axis == 1 or axis == 'column':
             new_df = self._drop_column(labels)
+        else:
+            new_df = self
         if inplace:
             self.index = new_df.index
             self.columns = new_df.columns
@@ -329,18 +360,32 @@ class DataFrame:
         else:
             return new_df
 
+    # def export_to_pandas(self):
+    #     pd_df = pd.DataFrame(columns=self.columns)
+    #     for idx in range(len(self)):
+    #         pd_df = pd_df.append(dict(self.iloc[idx]), ignore_index=True)
+    #     return pd_df
+
     def export_to_pandas(self):
-        pd_df = pd.DataFrame(columns=self.columns)
-        for idx in range(len(self)):
-            pd_df = pd_df.append(dict(self.iloc[idx]), ignore_index=True)
+        export_dict = {}
+        for col_name in self.columns:
+            export_dict[col_name] = self[col_name]
+        pd_df = pd.DataFrame(export_dict)
         return pd_df
 
     def __len__(self):
         return len(self.data_frame)
 
     def __getitem__(self, col_name):
-        column_item = ColumnItem(self, col_name)
-        return column_item
+        ret_item = None
+        if type(col_name) is str:
+            ret_item = ColumnItem(self, col_name)
+        elif type(col_name) is list:
+            if (type(col_name[0]) is bool) and (len(col_name) == len(self.data_frame)):
+                ret_item = self.loc[col_name]
+            elif type(col_name[0]) is str:
+                ret_item = self._pick_columns(col_name)
+        return ret_item
 
     def __setitem__(self, key, value):
         col_idx = self.columns.index(key)
