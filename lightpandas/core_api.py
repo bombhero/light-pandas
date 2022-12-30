@@ -84,7 +84,7 @@ def import_from_pandas(pandas_df):
         pd_row = dict(pandas_df.iloc[idx])
         for col_name in pd_row.keys():
             lpd_row[col_name] = str(pd_row[col_name])
-        result_df.append(lpd_row, ignore_index=True)
+        result_df = result_df.append(lpd_row, ignore_index=True)
     return result_df
 
 

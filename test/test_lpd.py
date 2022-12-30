@@ -1,6 +1,7 @@
 # coding=utf8
 import unittest
 import os
+import time
 import lightpandas as lpd
 import pandas as pd
 
@@ -124,6 +125,15 @@ class Test(unittest.TestCase):
         df = df.drop_duplicates()
         self.assertEqual(len(df), 5)
 
+    def test_df_drop_duplicates_with_subset(self):
+        df = lpd.read_csv('test.csv')
+        df = df.append({'item1': 't3', 'item2': 't4', 'item3': '4'}, ignore_index=True)
+        df = df.append({'item1': 't3', 'item2': 't1', 'item3': '4'}, ignore_index=True)
+        df1 = df.drop_duplicates(['item1'])
+        df2 = df.drop_duplicates(['item1', 'item2'])
+        self.assertEqual(len(df1), 5)
+        self.assertEqual(len(df2), 6)
+
     def test_export_to_pd(self):
         df = lpd.read_csv('test.csv')
         pd_df = df.export_to_pandas()
@@ -198,6 +208,28 @@ class Test(unittest.TestCase):
     def test_create_df_from_dict2(self):
         df = lpd.DataFrame({'item1': [1, 2], 'item2': [3, 4, 5]}, columns=['item1'])
         self.assertEqual(len(df), 3)
+
+    def test_append_list(self):
+        df = lpd.read_csv('test.csv')
+        other_list = ['t1', 't4', '20']
+        df = df.append(other_list)
+        self.assertEqual(len(df), 6)
+
+    def test_append_df(self):
+        df = lpd.read_csv('test.csv')
+        other_df = lpd.DataFrame({'item3': ['3', '6'], 'item1': ['1', '4']}, columns=['item2'])
+        df = df.append(other_df, ignore_index=True)
+        self.assertEqual(len(df), 7)
+
+    def test_huge_pick(self):
+        start_ts = time.time()
+        col1 = ['i1' for _ in range(10000)] + ['i2' for _ in range(10000)] + ['i3' for _ in range(10000)]
+        col2 = [idx for idx in range(30000)]
+        df = lpd.DataFrame({'item1': col1, 'item2': col2})
+        tmp_df = df[df['item1'] == 'i2']
+        end_ts = time.time()
+        self.assertEqual(len(tmp_df), 10000)
+        self.assertLess((end_ts - start_ts), 1)
 
 
 if __name__ == '__main__':

@@ -53,6 +53,8 @@ class ColumnItem:
                 result_li.append(self.df.data_frame[row_idx][col_idx] < other)
             elif op == 'le':
                 result_li.append(self.df.data_frame[row_idx][col_idx] <= other)
+            elif op == 'ne':
+                result_li.append(self.df.data_frame[row_idx][col_idx] != other)
         return result_li
 
     def __gt__(self, other):
@@ -63,6 +65,9 @@ class ColumnItem:
 
     def __eq__(self, other):
         return self._compare(other, 'eq')
+
+    def __ne__(self, other):
+        return self._compare(other, 'ne')
 
     def __lt__(self, other):
         return self._compare(other, 'lt')
@@ -113,14 +118,13 @@ class Location:
 
     def __getitem__(self, item):
         if isinstance(item, list):
+            if not isinstance(item[0], bool):
+                raise TypeError('item list should be bool.')
             result_df = DataFrame(columns=self.df.columns)
             for row_idx in range(len(item)):
                 if not item[row_idx]:
                     continue
-                row_dict = {}
-                for col_idx in range(len(self.df.columns)):
-                    row_dict[self.df.columns[col_idx]] = self.df.data_frame[row_idx][col_idx]
-                result_df = result_df.append(row_dict, ignore_index=True)
+                result_df._append_list(self.df.data_frame[row_idx])
             return result_df
         elif isinstance(item, tuple):
             col_idx = self.df.columns.index(item[1])
@@ -155,38 +159,45 @@ class DataFrame:
         self.iloc = IndexLocation(self)
         self.loc = Location(self)
         if data is not None:
-            max_row_count = 1
-            row_idx = 0
-            while True:
-                row_dict = {}
-                skip_row = True
-                for col_name in data.keys():
-                    if row_idx == 0:
-                        if col_name not in self.columns:
-                            self.columns.append(col_name)
-                        if type(data[col_name]) == list:
-                            if len(data[col_name]) > max_row_count:
-                                max_row_count = len(data[col_name])
-                            if len(data[col_name]) > 0:
-                                row_val = str(data[col_name][row_idx])
-                                skip_row = False
+            if isinstance(data, dict):
+                for key_name in data:
+                    if key_name not in self.columns:
+                        self.columns.append(key_name)
+                max_row_count = 1
+                row_idx = 0
+                while True:
+                    row_list = []
+                    skip_row = True
+                    for col_name in self.columns:
+                        if col_name in data.keys():
+                            if row_idx == 0:
+                                if isinstance(data[col_name], list):
+                                    if len(data[col_name]) > max_row_count:
+                                        max_row_count = len(data[col_name])
+                                    if len(data[col_name]) > 0:
+                                        row_val = str(data[col_name][row_idx])
+                                        skip_row = False
+                                    else:
+                                        row_val = ''
+                                else:
+                                    row_val = str(data[col_name])
+                                    skip_row = False
                             else:
-                                row_val = ''
-                        else:
-                            row_val = str(data[col_name])
-                            skip_row = False
-                    else:
-                        if type(data[col_name]) == list and len(data[col_name]) > row_idx:
-                            row_val = str(data[col_name][row_idx])
+                                if isinstance(data[col_name], list) and len(data[col_name]) > row_idx:
+                                    row_val = str(data[col_name][row_idx])
+                                else:
+                                    row_val = ''
+                                skip_row = False
                         else:
                             row_val = ''
-                        skip_row = False
-                    row_dict[col_name] = row_val
-                if not skip_row:
-                    self.append(row_dict)
-                row_idx += 1
-                if row_idx >= max_row_count:
-                    break
+                        row_list.append(row_val)
+                    if not skip_row:
+                        self._append_list(row_list)
+                    row_idx += 1
+                    if row_idx >= max_row_count:
+                        break
+            else:
+                raise ValueError('Cannot support the data type ()')
 
     def increase_index(self, defined_index=None):
         if defined_index is None:
@@ -203,29 +214,38 @@ class DataFrame:
             local_index = str(defined_index)
         self.index.append(local_index)
 
-    def append(self, data_dict, ignore_index=False):
-        df = copy.copy(self)
-        row_line = ['' for _ in range(len(df.columns))]
-        for key in data_dict.keys():
-            if key not in df.columns:
-                df.columns.append(key)
-                for idx in range(len(df.data_frame)):
-                    df.data_frame.append('')
-                row_line.append('')
-            col_num = df.columns.index(key)
-            row_line[col_num] = str(data_dict[key])
-        df.data_frame.append(row_line)
-        df.increase_index()
+    def append(self, others, ignore_index=False):
+        df = copy.deepcopy(self)
+        if isinstance(others, dict):
+            row_line = ['' for _ in range(len(df.columns))]
+            for key in others.keys():
+                if key not in df.columns:
+                    df.columns.append(key)
+                    for idx in range(len(df.data_frame)):
+                        df.data_frame.append('')
+                    row_line.append('')
+                col_num = df.columns.index(key)
+                row_line[col_num] = str(others[key])
+            df.data_frame.append(row_line)
+            df.increase_index()
+        elif isinstance(others, list):
+            df._append_list(others)
+        elif isinstance(others, type(self)):
+            col_seq = [others.columns.index(col_name) for col_name in self.columns]
+            for idx in range(len(others)):
+                new_row = others.data_frame[idx]
+                new_row = [new_row[idx] for idx in col_seq]
+                df._append_list(new_row)
+        else:
+            raise ValueError('others should be list, dict or DataFrame.')
         return df
 
     def _append_list(self, data_list):
-        df = copy.copy(self)
         if len(data_list) != len(self.columns):
-            return df
+            raise IndexError('Expect len is {} but input len is {}'.format(len(self.columns), len(data_list)))
         else:
-            df.data_frame.append(data_list)
-            df.increase_index()
-            return df
+            self.data_frame.append(data_list)
+            self.increase_index()
 
     def _pick_columns(self, col_list):
         new_df = DataFrame(columns=col_list)
@@ -298,11 +318,35 @@ class DataFrame:
         result_df._re_index(self.index_name)
         return result_df
 
-    def drop_duplicates(self):
+    def drop_duplicates(self, subset=None, keep='first', inplace=False):
         result_df = DataFrame(columns=self.columns)
-        for row in self.data_frame:
-            if row not in result_df.data_frame:
-                result_df._append_list(row)
+        if subset is None:
+            for row in self.data_frame:
+                if row not in result_df.data_frame:
+                    result_df._append_list(row)
+        elif type(subset) is list:
+            subset_idx_list = []
+            subset_dict = {}
+            for subset_item in subset:
+                subset_idx_list.append(self.columns.index(subset_item))
+            for row_line in self.data_frame:
+                row_key = ''
+                for subset_idx in subset_idx_list:
+                    row_key += '{}_'.format(row_line[subset_idx])
+                if row_key in subset_dict.keys():
+                    subset_dict[row_key].append(row_line)
+                else:
+                    subset_dict[row_key] = [row_line]
+            if keep == 'first':
+                keep_id = 0
+            elif keep == 'last':
+                keep_id = -1
+            else:
+                raise ValueError('keep should be fist or last')
+            for row_key in subset_dict.keys():
+                result_df._append_list(subset_dict[row_key][keep_id])
+        else:
+            raise ValueError('subset should be None or list.')
         return result_df
 
     def _drop_one_row(self, idx_name):
@@ -378,13 +422,15 @@ class DataFrame:
 
     def __getitem__(self, col_name):
         ret_item = None
-        if type(col_name) is str:
+        if isinstance(col_name, str):
             ret_item = ColumnItem(self, col_name)
-        elif type(col_name) is list:
+        elif isinstance(col_name, list):
             if (type(col_name[0]) is bool) and (len(col_name) == len(self.data_frame)):
                 ret_item = self.loc[col_name]
             elif type(col_name[0]) is str:
                 ret_item = self._pick_columns(col_name)
+        else:
+            raise TypeError('col_name only support list or str.')
         return ret_item
 
     def __setitem__(self, key, value):
