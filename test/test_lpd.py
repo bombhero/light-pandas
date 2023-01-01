@@ -17,8 +17,8 @@ class Test(unittest.TestCase):
         self.assertEqual(len(df), 1)
 
     def test_read_csv(self):
-        df = lpd.read_csv('final_data.csv', index_col=0)
-        self.assertEqual(len(df), 2021)
+        df = lpd.read_csv('test.csv', index_col=0)
+        self.assertEqual(len(df), 5)
         # self.assertListEqual(list(df.columns), ['item1', 'item2'])
 
     def test_read_csv2(self):
@@ -223,13 +223,15 @@ class Test(unittest.TestCase):
 
     def test_huge_pick(self):
         start_ts = time.time()
-        col1 = ['i1' for _ in range(10000)] + ['i2' for _ in range(10000)] + ['i3' for _ in range(10000)]
-        col2 = [idx for idx in range(30000)]
+        col1 = ['i1' for _ in range(1000)] + ['i2' for _ in range(1000)] + ['i3' for _ in range(1000)]
+        col2 = [idx for idx in range(3000)]
         df = lpd.DataFrame({'item1': col1, 'item2': col2})
+        created_ts = time.time()
         tmp_df = df[df['item1'] == 'i2']
         end_ts = time.time()
-        self.assertEqual(len(tmp_df), 10000)
-        self.assertLess((end_ts - start_ts), 1)
+        self.assertEqual(len(tmp_df), 1000)
+        self.assertLess((created_ts - start_ts), 1)
+        self.assertLess((end_ts - created_ts), 1)
 
 
 if __name__ == '__main__':

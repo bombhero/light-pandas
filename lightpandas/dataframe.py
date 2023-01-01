@@ -417,6 +417,16 @@ class DataFrame:
         pd_df = pd.DataFrame(export_dict)
         return pd_df
 
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memodict={}):
+        ret_df = DataFrame(columns=self.columns)
+        ret_df.index = copy.copy(self.index)
+        ret_df.index_name = self.index_name
+        ret_df.data_frame = copy.copy(self.data_frame)
+        return ret_df
+
     def __len__(self):
         return len(self.data_frame)
 
@@ -425,10 +435,13 @@ class DataFrame:
         if isinstance(col_name, str):
             ret_item = ColumnItem(self, col_name)
         elif isinstance(col_name, list):
-            if (type(col_name[0]) is bool) and (len(col_name) == len(self.data_frame)):
-                ret_item = self.loc[col_name]
-            elif type(col_name[0]) is str:
-                ret_item = self._pick_columns(col_name)
+            if len(col_name) == 0:
+                ret_item = DataFrame(columns=self.columns)
+            else:
+                if (type(col_name[0]) is bool) and (len(col_name) == len(self.data_frame)):
+                    ret_item = self.loc[col_name]
+                elif type(col_name[0]) is str:
+                    ret_item = self._pick_columns(col_name)
         else:
             raise TypeError('col_name only support list or str.')
         return ret_item
