@@ -160,42 +160,24 @@ class DataFrame:
         self.loc = Location(self)
         if data is not None:
             if isinstance(data, dict):
-                for key_name in data:
+                max_row_count = 0
+                col_struct_frame = []
+                for key_name in data.keys():
                     if key_name not in self.columns:
                         self.columns.append(key_name)
-                max_row_count = 1
-                row_idx = 0
-                while True:
-                    row_list = []
-                    skip_row = True
-                    for col_name in self.columns:
-                        if col_name in data.keys():
-                            if row_idx == 0:
-                                if isinstance(data[col_name], list):
-                                    if len(data[col_name]) > max_row_count:
-                                        max_row_count = len(data[col_name])
-                                    if len(data[col_name]) > 0:
-                                        row_val = str(data[col_name][row_idx])
-                                        skip_row = False
-                                    else:
-                                        row_val = ''
-                                else:
-                                    row_val = str(data[col_name])
-                                    skip_row = False
-                            else:
-                                if isinstance(data[col_name], list) and len(data[col_name]) > row_idx:
-                                    row_val = str(data[col_name][row_idx])
-                                else:
-                                    row_val = ''
-                                skip_row = False
-                        else:
-                            row_val = ''
-                        row_list.append(row_val)
-                    if not skip_row:
-                        self._append_list(row_list)
-                    row_idx += 1
-                    if row_idx >= max_row_count:
-                        break
+                        if isinstance(data[key_name], list) and len(data[key_name]) > max_row_count:
+                            max_row_count = len(data[key_name])
+                for col_name in self.columns:
+                    if col_name not in data.keys():
+                        col_struct_frame.append(['' for _ in range(max_row_count)])
+                        continue
+                    if isinstance(data[col_name], list):
+                        col_struct_frame.append(data[col_name] +
+                                                ['' for _ in range(max_row_count - len(data[col_name]))])
+                    elif isinstance(data[col_name], str):
+                        col_struct_frame.append([data[col_name]] + ['' for _ in range(max_row_count - 1)])
+                self.data_frame = list(map(list, zip(*col_struct_frame)))
+                self._re_index(self.index_name)
             else:
                 raise ValueError('Cannot support the data type ()')
 
