@@ -122,9 +122,9 @@ class Location:
                 raise TypeError('item list should be bool.')
             result_df = DataFrame(columns=self.df.columns)
             for row_idx in range(len(item)):
-                if not item[row_idx]:
-                    continue
-                result_df._append_list(self.df.data_frame[row_idx])
+                if item[row_idx]:
+                    result_df.data_frame.append(self.df.data_frame[row_idx])
+            result_df._re_index(self.df.index_name)
             return result_df
         elif isinstance(item, tuple):
             col_idx = self.df.columns.index(item[1])

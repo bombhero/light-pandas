@@ -223,15 +223,18 @@ class Test(unittest.TestCase):
 
     def test_huge_pick(self):
         start_ts = time.time()
-        col1 = ['i1' for _ in range(10000)] + ['i2' for _ in range(10000)] + ['i3' for _ in range(10000)]
-        col2 = [idx for idx in range(30000)]
+        col1 = ['i1' for _ in range(100000)] + ['i2' for _ in range(100000)] + ['i3' for _ in range(100000)]
+        col2 = [idx for idx in range(300000)]
         df = lpd.DataFrame({'item1': col1, 'item2': col2})
         created_ts = time.time()
-        tmp_df = df[df['item1'] == 'i2']
+        tmp_filter = df['item1'] == 'i2'
+        mid_ts = time.time()
+        tmp_df = df[tmp_filter]
         end_ts = time.time()
-        self.assertEqual(len(tmp_df), 10000)
-        self.assertLess((created_ts - start_ts), 0.5)
-        self.assertLess((end_ts - created_ts), 1.2)
+        self.assertEqual(len(tmp_df), 100000)
+        self.assertLess((created_ts - start_ts), 0.2)
+        self.assertLess((mid_ts - created_ts), 0.1)
+        self.assertLess((end_ts - created_ts), 0.1)
 
 
 if __name__ == '__main__':
