@@ -111,6 +111,9 @@ class IndexLocation:
             else:
                 raise IndexError("single positional indexer is out-of-bounds")
 
+    def __setitem__(self, key, value):
+        self.df.data_frame[key[0]][key[1]] = value
+
 
 class Location:
     def __init__(self, df):
@@ -198,7 +201,7 @@ class DataFrame:
 
     def append(self, others, ignore_index=False):
         df = copy.deepcopy(self)
-        if isinstance(others, dict):
+        if isinstance(others, dict) or isinstance(others, RowItem):
             row_line = ['' for _ in range(len(df.columns))]
             for key in others.keys():
                 if key not in df.columns:
@@ -218,8 +221,10 @@ class DataFrame:
                 new_row = others.data_frame[idx]
                 new_row = [new_row[idx] for idx in col_seq]
                 df._append_list(new_row)
+        elif others is None:
+            pass
         else:
-            raise ValueError('others should be list, dict or DataFrame.')
+            raise ValueError('others should be list, dict or DataFrame. Current type is {}'.format(type(others)))
         return df
 
     def _append_list(self, data_list):

@@ -42,8 +42,15 @@ def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, keep_defau
             if index_col is not None:
                 index_val = row[index_col]
                 del row[index_col]
+            if len(row) < len(df.columns):
+                gap_count = len(df.columns) - len(row)
+                for _ in range(gap_count):
+                    row.append('')
             df.data_frame.append(row)
-        df._re_index(df.index_name)
+            if index_val is not None:
+                df.index.append(index_val)
+        if index_col is None:
+            df._re_index(df.index_name)
     return df
 
 

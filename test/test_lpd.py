@@ -60,6 +60,19 @@ class Test(unittest.TestCase):
         row_line = dict(df.iloc[1])
         self.assertDictEqual(row_line, {'item1': 'bomb', 'item2': 't4', 'item3': '4'})
 
+    def test_iloc_set2(self):
+        df = lpd.read_csv('test2.csv')
+        col_idx = list(df.columns).index('item3')
+        df.iloc[0, col_idx] = 't9'
+        self.assertEqual(df.iloc[0]['item3'], 't9')
+
+    def test_df_append(self):
+        org_df = lpd.read_csv('test2.csv')
+        new_df = lpd.DataFrame(columns=org_df.columns)
+        for idx in range(len(org_df)):
+            new_df = new_df.append(org_df.iloc[idx])
+        self.assertEqual(len(org_df), len(new_df))
+
     def test_col_pick(self):
         df = lpd.read_csv('test.csv')
         row_li = list(df['item1'])
