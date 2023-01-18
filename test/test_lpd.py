@@ -234,6 +234,11 @@ class Test(unittest.TestCase):
         df = df.append(other_df, ignore_index=True)
         self.assertEqual(len(df), 7)
 
+    def test_set_new_column(self):
+        df = lpd.read_csv('test.csv')
+        df['item4'] = 'test'
+        self.assertEqual(df.iloc[1]['item4'], 'test')
+
     def test_huge_pick(self):
         start_ts = time.time()
         col1 = ['i1' for _ in range(100000)] + ['i2' for _ in range(100000)] + ['i3' for _ in range(100000)]

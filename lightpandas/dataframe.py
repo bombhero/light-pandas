@@ -205,9 +205,7 @@ class DataFrame:
             row_line = ['' for _ in range(len(df.columns))]
             for key in others.keys():
                 if key not in df.columns:
-                    df.columns.append(key)
-                    for idx in range(len(df.data_frame)):
-                        df.data_frame.append('')
+                    df._insert_empty_column(key)
                     row_line.append('')
                 col_num = df.columns.index(key)
                 row_line[col_num] = str(others[key])
@@ -226,6 +224,13 @@ class DataFrame:
         else:
             raise ValueError('others should be list, dict or DataFrame. Current type is {}'.format(type(others)))
         return df
+
+    def _insert_empty_column(self, col_name):
+        if col_name in self.columns:
+            return
+        self.columns.append(col_name)
+        for idx in range(len(self.data_frame)):
+            self.data_frame[idx].append('')
 
     def _append_list(self, data_list):
         if len(data_list) != len(self.columns):
@@ -434,6 +439,8 @@ class DataFrame:
         return ret_item
 
     def __setitem__(self, key, value):
+        if key not in self.columns:
+            self._insert_empty_column(key)
         col_idx = self.columns.index(key)
         for row_idx in range(len(self.data_frame)):
             self.data_frame[row_idx][col_idx] = value
