@@ -214,6 +214,13 @@ class Test(unittest.TestCase):
         df = lpd.read_excel('test.xlsx', sheet_name='TC01')
         self.assertEqual(len(df), 5)
 
+    def test_write_excel(self):
+        df = lpd.read_excel('test.xlsx', sheet_name='TC01')
+        excel_writer = lpd.ExcelWriter('test_w.xlsx')
+        df.to_excel(excel_writer, 'TC01', index=False)
+        excel_writer.save()
+        self.assertEqual(len(df), 5)
+
     def test_create_df_from_dict(self):
         df = lpd.DataFrame({'item1': [1, 2], 'item2': [3, 4]}, columns=['item3'])
         self.assertEqual(len(df), 2)
@@ -253,6 +260,11 @@ class Test(unittest.TestCase):
         self.assertLess((created_ts - start_ts), 0.2)
         self.assertLess((mid_ts - created_ts), 0.1)
         self.assertLess((end_ts - created_ts), 0.1)
+
+    def test_add_operation(self):
+        df = lpd.read_csv('test.csv')
+        result = sum(list(map(float, df.loc[df['item1'] > 't1', 'item3'])))
+        self.assertEqual(result, 40)
 
 
 if __name__ == '__main__':

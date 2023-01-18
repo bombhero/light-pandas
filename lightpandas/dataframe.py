@@ -405,7 +405,7 @@ class DataFrame:
     def export_to_pandas(self):
         export_dict = {}
         for col_name in self.columns:
-            export_dict[col_name] = self[col_name]
+            export_dict[col_name] = list(self[col_name])
         pd_df = pd.DataFrame(export_dict)
         return pd_df
 
