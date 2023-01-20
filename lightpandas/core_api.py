@@ -30,9 +30,9 @@ def _generate_columns(col_list, index_col):
     return index_name, result_col
 
 
-def read_csv(filepath_or_buf, delimiter=',', sep=',', index_col=None, keep_default_na=False, low_memory=False):
+def read_csv(filepath_or_buffer, delimiter=',', sep=',', index_col=None, keep_default_na=False, low_memory=False):
     delimiter = sep
-    with open(filepath_or_buf, mode='r', encoding='utf-8') as f:
+    with open(filepath_or_buffer, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
         index_name, columns = _generate_columns(next(reader), index_col)
         df = DataFrame(columns=columns)
