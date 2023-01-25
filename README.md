@@ -12,6 +12,11 @@ The properties as below:
 - The cell type only support str.
 - TBD
 
+## Install
+```
+pip install light-pandas
+```
+
 ## Example
 
 - Create an empty DataFrame which contained two columns.

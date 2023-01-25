@@ -41,6 +41,7 @@ class ColumnItem:
 
     def _compare(self, other, op):
         result_li = []
+        other = str(other)
         col_idx = self.df.columns.index(self.col_name)
         for row_idx in range(len(self)):
             if op == 'gt':
