@@ -152,6 +152,14 @@ class Test(unittest.TestCase):
         pd_df = df.export_to_pandas()
         self.assertEqual(len(pd_df), 5)
 
+    def test_export_to_numpy(self):
+        df = lpd.DataFrame(columns=('t1', 't2'))
+        df = df.append({'t1': '1', 't2': '2'}, ignore_index=True)
+        df = df.append({'t1': '3', 't2': '4'}, ignore_index=True)
+        df = df.append({'t1': '5', 't2': '6'}, ignore_index=True)
+        data_x = df.export_to_numpy()
+        self.assertEqual(len(data_x), 3)
+
     def test_import_from_pd(self):
         pd_df = pd.read_csv('test.csv', delimiter=',')
         df = lpd.import_from_pandas(pd_df)

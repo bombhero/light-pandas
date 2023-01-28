@@ -2,6 +2,7 @@
 import copy
 import csv
 import pandas as pd
+import numpy as np
 
 
 class RowItem:
@@ -209,7 +210,10 @@ class DataFrame:
                     df._insert_empty_column(key)
                     row_line.append('')
                 col_num = df.columns.index(key)
-                row_line[col_num] = str(others[key])
+                if others[key] is None:
+                    row_line[col_num] = ''
+                else:
+                    row_line[col_num] = str(others[key])
             df.data_frame.append(row_line)
             df.increase_index()
         elif isinstance(others, list):
@@ -409,6 +413,16 @@ class DataFrame:
             export_dict[col_name] = list(self[col_name])
         pd_df = pd.DataFrame(export_dict)
         return pd_df
+
+    def export_to_numpy(self):
+        export_np = np.array([[]])
+        for idx in range(len(self)):
+            row_line = list(map(float, self.data_frame[idx]))
+            if export_np.size == 0:
+                export_np = np.array([row_line])
+            else:
+                export_np = np.concatenate((export_np, np.array([row_line])), axis=0)
+        return export_np
 
     def __copy__(self):
         return self
