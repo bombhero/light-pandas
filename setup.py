@@ -11,7 +11,7 @@ if __name__ == '__main__':
     setup(
         name='light-pandas',
         packages=find_packages(include=['lightpandas*']),
-        version='0.1.18',
+        version='0.1.19',
         description='Light weight Pandas library',
         long_description=long_description,
         long_description_content_type="text/markdown",
