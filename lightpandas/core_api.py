@@ -31,7 +31,7 @@ def _generate_columns(col_list, index_col):
 
 
 def read_csv(filepath_or_buffer, delimiter=',', sep=',', index_col=None, keep_default_na=False, low_memory=False,
-             dtype=None):
+             dtype=None, na_values=None):
     delimiter = sep
     with open(filepath_or_buffer, mode='r', encoding='utf-8') as f:
         reader = csv.reader(f)
