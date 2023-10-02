@@ -153,7 +153,7 @@ class Location:
 
 
 class DataFrame:
-    def __init__(self, data=None, columns=None):
+    def __init__(self, data=None, columns=None, index=None):
         if columns is None:
             self.columns = []
         else:

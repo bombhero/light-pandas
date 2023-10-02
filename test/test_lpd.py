@@ -274,6 +274,12 @@ class Test(unittest.TestCase):
         result = sum(list(map(float, df.loc[df['item1'] > 't1', 'item3'])))
         self.assertEqual(result, 40)
 
+    def test_concat(self):
+        df1 = lpd.DataFrame({'t1': 'bomb', 't2': 'hero'})
+        df2 = lpd.DataFrame({'t1': 'test', 't2': 'ttt'})
+        result_df = lpd.concat((df1, df2), ignore_index=True)
+        self.assertEqual(len(result_df), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

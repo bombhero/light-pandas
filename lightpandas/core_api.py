@@ -105,3 +105,11 @@ def read_excel(io, sheet_name=None, keep_default_na=False, na_values=None, heade
 def ExcelWriter(path):
     return pd.ExcelWriter(path=path)
 
+
+def concat(objs, ignore_index=True):
+    base_df = objs[0]
+    if len(objs) == 1:
+        return base_df
+    for idx in range(1, len(objs)):
+        base_df = base_df.append(objs[idx])
+    return base_df
